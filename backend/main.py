@@ -9,3 +9,12 @@ app = FastAPI()
 def hello_world():
     # Retorna o dicionário que será convertido automaticamente para JSON pelo FastAPI
     return {"mensagem": "Olá, mundo! 🌍"}
+
+# Define a rota para obter a lista de figurinhas do álbum
+@app.get("/figurinhas")
+def listar_figurinhas():
+    # Retorna uma lista de dicionários contendo os dados das figurinhas de exemplo
+    return [
+        {"id": 1, "nome": "Alan Turing", "categoria": "IA"},
+        {"id": 2, "nome": "John McCarthy", "categoria": "IA"}
+    ]
