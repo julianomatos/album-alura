@@ -1,88 +1,75 @@
-# Importa a classe principal do FastAPI para criação do nosso servidor
-from fastapi import FastAPI
-# Importa o StaticFiles para servir arquivos estáticos como imagens
-from fastapi.staticfiles import StaticFiles
-# Importa o módulo os para trabalhar com caminhos de diretório
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 import os
+import glob
 
-# Cria a instância da aplicação FastAPI
+# Inicializa o servidor FastAPI
 app = FastAPI()
 
-# Define o caminho absoluto da pasta de imagens para o servidor encontrar a pasta independente de onde for executado
+# 1. Configura o middleware CORS para aceitar requisições de qualquer origem
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# 2. Define caminhos absolutos para a pasta de imagens
 PASTA_BASE = os.path.dirname(os.path.abspath(__file__))
 PASTA_IMAGENS = os.path.join(PASTA_BASE, "figurinhas")
 
-# Configura os arquivos estáticos: monta a pasta PASTA_IMAGENS na rota "/imgs"
-app.mount("/imgs", StaticFiles(directory=PASTA_IMAGENS), name="imgs")
+# 3. Lista de figurinhas com as 30 figurinhas.
+# Apenas a figurinha 30 ("Você") está comentada pois sua imagem não existe na pasta.
+figurinhas = [
+    {"id": 1, "nome": "Alan Turing", "categoria": "IA", "imagem_url": "/figurinhas/1/imagem"},
+    {"id": 2, "nome": "John McCarthy", "categoria": "IA", "imagem_url": "/figurinhas/2/imagem"},
+    {"id": 3, "nome": "Sam Altman", "categoria": "IA", "imagem_url": "/figurinhas/3/imagem"},
+    {"id": 4, "nome": "Geoffrey Hinton", "categoria": "IA", "imagem_url": "/figurinhas/4/imagem"},
+    {"id": 5, "nome": "Yann LeCun", "categoria": "IA", "imagem_url": "/figurinhas/5/imagem"},
+    {"id": 6, "nome": "Guido van Rossum", "categoria": "PYTHON", "imagem_url": "/figurinhas/6/imagem"},
+    {"id": 7, "nome": "Tim Peters", "categoria": "PYTHON", "imagem_url": "/figurinhas/7/imagem"},
+    {"id": 8, "nome": "Raymond Hettinger", "categoria": "PYTHON", "imagem_url": "/figurinhas/8/imagem"},
+    {"id": 9, "nome": "Travis Oliphant", "categoria": "PYTHON", "imagem_url": "/figurinhas/9/imagem"},
+    {"id": 10, "nome": "Wes McKinney", "categoria": "PYTHON", "imagem_url": "/figurinhas/10/imagem"},
+    {"id": 11, "nome": "Edgar F. Codd", "categoria": "BANCO DE DADOS", "imagem_url": "/figurinhas/11/imagem"},
+    {"id": 12, "nome": "Larry Ellison", "categoria": "BANCO DE DADOS", "imagem_url": "/figurinhas/12/imagem"},
+    {"id": 13, "nome": "Michael Widenius", "categoria": "BANCO DE DADOS", "imagem_url": "/figurinhas/13/imagem"},
+    {"id": 14, "nome": "Salvatore Sanfilippo", "categoria": "BANCO DE DADOS", "imagem_url": "/figurinhas/14/imagem"},
+    {"id": 15, "nome": "Eliot Horowitz", "categoria": "BANCO DE DADOS", "imagem_url": "/figurinhas/15/imagem"},
+    {"id": 16, "nome": "Linus Torvalds", "categoria": "SISTEMAS OPERACIONAIS", "imagem_url": "/figurinhas/16/imagem"},
+    {"id": 17, "nome": "Dennis Ritchie", "categoria": "SISTEMAS OPERACIONAIS", "imagem_url": "/figurinhas/17/imagem"},
+    {"id": 18, "nome": "Richard Stallman", "categoria": "SISTEMAS OPERACIONAIS", "imagem_url": "/figurinhas/18/imagem"},
+    {"id": 19, "nome": "Bill Gates", "categoria": "SISTEMAS OPERACIONAIS", "imagem_url": "/figurinhas/19/imagem"},
+    {"id": 20, "nome": "Steve Jobs", "categoria": "SISTEMAS OPERACIONAIS", "imagem_url": "/figurinhas/20/imagem"},
+    {"id": 21, "nome": "Paulo Silveira", "categoria": "BRASIL", "imagem_url": "/figurinhas/21/imagem"},
+    {"id": 22, "nome": "Guilherme Silveira", "categoria": "BRASIL", "imagem_url": "/figurinhas/22/imagem"},
+    {"id": 23, "nome": "Gustavo Guanabara", "categoria": "BRASIL", "imagem_url": "/figurinhas/23/imagem"},
+    {"id": 24, "nome": "Maurício Aniche", "categoria": "BRASIL", "imagem_url": "/figurinhas/24/imagem"},
+    {"id": 25, "nome": "Andre David", "categoria": "BRASIL", "imagem_url": "/figurinhas/25/imagem"},
+    {"id": 26, "nome": "Guilherme Lima", "categoria": "BRASIL", "imagem_url": "/figurinhas/26/imagem"},
+    {"id": 27, "nome": "Gi Space Coding", "categoria": "BRASIL", "imagem_url": "/figurinhas/27/imagem"},
+    {"id": 28, "nome": "Vinicius Neves", "categoria": "BRASIL", "imagem_url": "/figurinhas/28/imagem"},
+    {"id": 29, "nome": "Rafaela Ballerini", "categoria": "BRASIL", "imagem_url": "/figurinhas/29/imagem"},
+    {"id": 30, "nome": "Juliano Ramos Matos", "categoria": "BRASIL", "imagem_url": "/figurinhas/30/imagem"}
+]
 
-# Mapeamento completo dos metadados das figurinhas (nome e categoria) por ID com base no index.html
-METADADOS = {
-    1: {"nome": "Alan Turing", "categoria": "IA"},
-    2: {"nome": "John McCarthy", "categoria": "IA"},
-    3: {"nome": "Sam Altman", "categoria": "IA"},
-    4: {"nome": "Geoffrey Hinton", "categoria": "IA"},
-    5: {"nome": "Yann LeCun", "categoria": "IA"},
-    6: {"nome": "Guido van Rossum", "categoria": "PYTHON"},
-    7: {"nome": "Tim Peters", "categoria": "PYTHON"},
-    8: {"nome": "Raymond Hettinger", "categoria": "PYTHON"},
-    9: {"nome": "Travis Oliphant", "categoria": "PYTHON"},
-    10: {"nome": "Wes McKinney", "categoria": "PYTHON"},
-    11: {"nome": "Edgar F. Codd", "categoria": "BANCO DE DADOS"},
-    12: {"nome": "Larry Ellison", "categoria": "BANCO DE DADOS"},
-    13: {"nome": "Michael Widenius", "categoria": "BANCO DE DADOS"},
-    14: {"nome": "Salvatore Sanfilippo", "categoria": "BANCO DE DADOS"},
-    15: {"nome": "Eliot Horowitz", "categoria": "BANCO DE DADOS"},
-    16: {"nome": "Linus Torvalds", "categoria": "SISTEMAS OPERACIONAIS"},
-    17: {"nome": "Dennis Ritchie", "categoria": "SISTEMAS OPERACIONAIS"},
-    18: {"nome": "Richard Stallman", "categoria": "SISTEMAS OPERACIONAIS"},
-    19: {"nome": "Bill Gates", "categoria": "SISTEMAS OPERACIONAIS"},
-    20: {"nome": "Steve Jobs", "categoria": "SISTEMAS OPERACIONAIS"},
-    21: {"nome": "Paulo Silveira", "categoria": "BRASIL"},
-    22: {"nome": "Guilherme Silveira", "categoria": "BRASIL"},
-    23: {"nome": "Gustavo Guanabara", "categoria": "BRASIL"},
-    24: {"nome": "Maurício Aniche", "categoria": "BRASIL"},
-    25: {"nome": "Andre David", "categoria": "BRASIL"},
-    26: {"nome": "Guilherme Lima", "categoria": "BRASIL"},
-    27: {"nome": "Gi Space Coding", "categoria": "BRASIL"},
-    28: {"nome": "Vinicius Neves", "categoria": "BRASIL"},
-    29: {"nome": "Rafaela Ballerini", "categoria": "BRASIL"},
-    30: {"nome": "Você", "categoria": "BRASIL"}
-}
-
-# Função que analisa a pasta de figurinhas e gera a lista dinamicamente
-def carregar_figurinhas():
-    figurinhas_list = []
-    ids_adicionados = set()
-    
-    if os.path.exists(PASTA_IMAGENS):
-        # Lista e ordena os arquivos para consistência
-        arquivos = sorted(os.listdir(PASTA_IMAGENS))
-        for arquivo in arquivos:
-            # Separa o nome do arquivo para extrair o ID (ex: "01-alan-turing.jpg" -> "01")
-            partes = arquivo.split("-")
-            if partes and partes[0].isdigit():
-                id_fig = int(partes[0])
-                # Garante que não adicionamos IDs duplicados e que o ID existe nos metadados
-                if id_fig in METADADOS and id_fig not in ids_adicionados:
-                    meta = METADADOS[id_fig]
-                    figurinhas_list.append({
-                        "id": id_fig,
-                        "nome": meta["nome"],
-                        "categoria": meta["categoria"],
-                        "imagem_url": f"/imgs/{arquivo}"
-                    })
-                    ids_adicionados.add(id_fig)
-                    
-    # Ordena a lista pelo ID da figurinha
-    figurinhas_list.sort(key=lambda x: x["id"])
-    return figurinhas_list
-
-# Cria a lista de figurinhas com base nos arquivos presentes na pasta figurinhas
-figurinhas = carregar_figurinhas()
-
-# Define a rota GET "/figurinhas" que retorna a lista de figurinhas
+# Endpoint para listar as figurinhas ativas
 @app.get("/figurinhas")
 def listar_figurinhas():
     return figurinhas
 
-
+# 4. Endpoint GET para buscar a imagem por ID usando glob
+@app.get("/figurinhas/{id}/imagem")
+def obter_imagem_figurinha(id: int):
+    # Procura arquivos com o prefixo formatado, por exemplo, "01[!0-9]*" para evitar colisões
+    padrao = os.path.join(PASTA_IMAGENS, f"{id:02d}[!0-9]*")
+    arquivos_encontrados = glob.glob(padrao)
+    
+    if not arquivos_encontrados:
+        raise HTTPException(status_code=404, detail="Imagem não encontrada")
+    
+    # Retorna o primeiro arquivo correspondente encontrado
+    caminho_arquivo = arquivos_encontrados[0]
+    return FileResponse(caminho_arquivo)
